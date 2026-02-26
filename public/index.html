@@ -3,180 +3,170 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>纯城池经营策略模拟器 - City Simulation</title>
+  <title>CIV-DASH: City Simulation</title>
   <link rel="stylesheet" href="styles.css">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700;800&family=Space+Grotesk:wght@400;600;700&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
 </head>
-<body>
-  <div class="container">
-    <header class="header">
-      <div class="glitch-wrapper">
-        <h1 class="title">纯城池经营策略模拟器</h1>
+<body class="civ-theme">
+  <!-- TOP SITUATION BAR -->
+  <header class="top-bar">
+    <div class="top-brand">
+      <span class="brand-text">CIV-DASH v1.0</span>
+      <span class="status-dot" id="status-dot"></span>
+      <span class="status-text" id="status-text">SYSTEM_READY</span>
+    </div>
+
+    <div class="top-metrics">
+      <div class="top-metric-item">
+        <span class="label">TICK</span>
+        <span class="val" id="val-tick">--</span>
       </div>
-      <p class="subtitle">实时城池经营 / 吞并统一模拟 - SESSION_MODE</p>
-    </header>
+      <div class="top-metric-item">
+        <span class="label">SESSION</span>
+        <span class="val" id="val-session-id">--</span>
+      </div>
+      <div class="top-metric-item">
+        <span class="label">OUTCOME</span>
+        <span class="val" id="val-outcome">--</span>
+      </div>
+    </div>
 
-    <main class="dashboard">
-      <aside class="controls-panel panel">
-        <div class="panel-header">
-          <h2>[ 创建会话 | NEW_SESSION ]</h2>
-        </div>
-        <form id="sim-form" class="sim-form">
-          <div class="input-group">
-            <label for="seed">随机种子 (SEED)</label>
-            <input type="number" id="seed" name="seed" value="42" required>
-          </div>
-          <div class="input-group">
-            <label for="difficulty">难度 (DIFFICULTY)</label>
-            <select id="difficulty" name="difficulty" class="sim-select">
-              <option value="newbie">新手 (NEWBIE)</option>
-              <option value="easy">简单 (EASY)</option>
-              <option value="standard" selected>标准 (STANDARD)</option>
-              <option value="hard">困难 (HARD)</option>
-            </select>
-          </div>
-          <button type="submit" class="btn-execute" id="btn-run">
-            <span class="btn-text">创建会话 (CREATE)</span>
-            <span class="btn-icon">→</span>
-          </button>
-        </form>
+    <div class="top-resources">
+      <div class="res-item" title="Grain"><span class="icon">GRI</span><span class="val" id="val-grain">--</span></div>
+      <div class="res-item" title="Gold"><span class="icon">GLD</span><span class="val" id="val-gold">--</span></div>
+      <div class="res-item" title="Population"><span class="icon">POP</span><span class="val" id="val-pop">--</span></div>
+      <div class="res-item" title="Security"><span class="icon">SEC</span><span class="val" id="val-sec">--</span></div>
+      <div class="res-item" title="Armament"><span class="icon">ARM</span><span class="val" id="val-arm">--</span></div>
+    </div>
 
-        <div id="session-controls" class="session-controls mt-2" style="display: none;">
-          <div class="panel-header">
-            <h2>[ 会话控制 | CONTROL ]</h2>
-          </div>
-          <div class="control-actions mt-1">
-            <button type="button" class="btn-action" id="btn-pause-resume">暂停 (PAUSE)</button>
-            <button type="button" class="btn-action" id="btn-step">单步 (STEP)</button>
-          </div>
-          <div class="input-group mt-1">
-            <label>速度倍率 (SPEED 1-10x): <span id="speed-label" class="highlight">1x</span></label>
-            <input type="range" id="speed-slider" min="1" max="10" value="1">
-          </div>
-          <button type="button" class="btn-action mt-1" id="btn-save">手动存档 (SAVE)</button>
-          <button type="button" class="btn-action mt-1" id="btn-load">读取最近存档 (LOAD)</button>
-        </div>
+    <div class="top-gov">
+      <div class="gov-item" title="Security">SEC <span id="val-gov-sec">--</span></div>
+      <div class="gov-item" title="Morale">MOR <span id="val-gov-mor">--</span></div>
+      <div class="gov-item" title="Corruption">COR <span id="val-gov-cor">--</span></div>
+      <div class="gov-item alert" title="Collapse Value">CV <span id="val-cv">--</span>/<span id="val-cv-max">--</span></div>
+    </div>
+  </header>
 
-        <div class="status-indicator">
-          <span class="status-dot" id="status-dot"></span>
-          <span class="status-text" id="status-text">SYSTEM_READY</span>
+  <div class="main-layout">
+    
+    <!-- LEFT SIDE: Board & Events -->
+    <div class="col-main">
+      <section class="province-board panel">
+        <div class="panel-head">
+          <span>== PROVINCE_MAP ==</span>
+          <span class="sub-stat">ANNEXED: <span id="val-cities">--</span></span>
         </div>
-      </aside>
-
-      <section class="results-panel panel">
-        <div class="panel-header">
-          <h2>[ 状态总览 | STATE_SUMMARY ]</h2>
-        </div>
-        <div class="metrics-grid">
-          <div class="metric-card">
-            <h3 class="metric-label">会话 ID (SESSION)</h3>
-            <div class="metric-value small-val" id="val-session-id">--</div>
+        <div class="panel-body">
+          <div id="tiers-container" class="tiers-container">
+            <div class="ascii-placeholder">AWAITING_SESSION...</div>
           </div>
-          <div class="metric-card">
-            <h3 class="metric-label">经过时间 (TICKS)</h3>
-            <div class="metric-value" id="val-tick">--</div>
-          </div>
-          <div class="metric-card">
-            <h3 class="metric-label">吞并城池 (ANNEXED)</h3>
-            <div class="metric-value highlight" id="val-cities">--</div>
-          </div>
-          <div class="metric-card" id="card-outcome">
-            <h3 class="metric-label">最终结局 (OUTCOME)</h3>
-            <div class="metric-value" id="val-outcome">--</div>
-          </div>
-        </div>
-
-        <div class="panel-header mt-2">
-          <h2>[ 核心资源 | CORE RESOURCES ]</h2>
-        </div>
-        <div class="metrics-grid cols-5">
-          <div class="metric-card"><h3 class="metric-label">粮 (Grain)</h3><div class="metric-value small-val" id="val-grain">--</div></div>
-          <div class="metric-card"><h3 class="metric-label">金 (Gold)</h3><div class="metric-value small-val" id="val-gold">--</div></div>
-          <div class="metric-card"><h3 class="metric-label">人口 (Pop)</h3><div class="metric-value small-val" id="val-pop">--</div></div>
-          <div class="metric-card"><h3 class="metric-label">治安 (Sec)</h3><div class="metric-value small-val" id="val-sec">--</div></div>
-          <div class="metric-card"><h3 class="metric-label">军备 (Arm)</h3><div class="metric-value small-val" id="val-arm">--</div></div>
-        </div>
-
-        <div class="panel-header mt-2">
-          <h2>[ 治理指标 | GOVERNANCE VALUES ]</h2>
-        </div>
-        <div class="metrics-grid cols-4">
-          <div class="metric-card"><h3 class="metric-label">治安 (Security)</h3><div class="metric-value small-val" id="val-gov-sec">--</div></div>
-          <div class="metric-card"><h3 class="metric-label">民心 (Morale)</h3><div class="metric-value small-val" id="val-gov-mor">--</div></div>
-          <div class="metric-card"><h3 class="metric-label">腐败 (Corruption)</h3><div class="metric-value small-val" id="val-gov-cor">--</div></div>
-          <div class="metric-card warning-card"><h3 class="metric-label">崩溃值 (CV / MAX <span id="val-cv-max">--</span>)</h3><div class="metric-value small-val" id="val-cv">--</div></div>
-        </div>
-
-        <div id="events-panel" style="display: none;">
-          <div class="panel-header mt-2">
-            <h2>[ 待处理事件 | PENDING EVENTS ]</h2>
-          </div>
-          <div id="events-container" class="events-container">
-            <div class="placeholder-text">暂无未决事件...</div>
-          </div>
-        </div>
-
-        <div id="action-panel" style="display: none;">
-          <div class="panel-header mt-2">
-            <h2>[ 外交与吞并 | DIPLOMACY & ANNEXATION ]</h2>
-          </div>
-          <div class="annex-panel">
-            <div class="input-group">
-              <label for="annex-lane">线路 (LANE)</label>
-              <select id="annex-lane" class="sim-select">
-                <option value="economy">经济渗透 (Economy)</option>
-                <option value="diplomacy">外交拉拢 (Diplomacy)</option>
-                <option value="war">武力攻城 (War)</option>
-              </select>
-            </div>
-            <div class="input-group">
-              <label for="annex-city">目标城市 (TARGET CITY)</label>
-              <input type="text" id="annex-city" placeholder="点击下方城市徽章选择或手动输入" class="sim-select" style="padding-left: 0.5rem; text-align: left;">
-            </div>
-            <button id="btn-do-annex" class="btn-action mt-1">执行吞并 (ANNEX)</button>
-            <div id="annex-feedback" class="mt-1" style="font-family: var(--font-mono); font-size: 0.85rem;"></div>
-          </div>
-        </div>
-
-        <div class="panel-header mt-2">
-          <h2>[ 城市情报 | CITY INTEL ]</h2>
-        </div>
-        <div class="tiers-container" id="tiers-container">
-          <div class="placeholder-text">等待会话数据...</div>
-        </div>
-        
-        <div class="panel-header mt-2">
-          <h2>[ 系统日志 | SYSTEM LOGS ]</h2>
-        </div>
-        <div class="logs-container" id="logs-container">
-          <!-- Generated via JS -->
-        </div>
-
-        <div class="panel-header mt-2">
-          <h2>[ 规则快照 | RULES SNAPSHOT ]</h2>
-        </div>
-        <ul class="rules-list" id="rules-list">
-          <li>等待会话数据...</li>
-        </ul>
-
-        <div class="json-viewer-wrapper mt-2">
-          <div class="json-viewer-header">
-            <span>RAW_STATE.JSON</span>
-            <button class="btn-icon-small" id="btn-copy" title="Copy to clipboard">
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-            </button>
-          </div>
-          <pre><code id="json-output">// Waiting for session...</code></pre>
         </div>
       </section>
-    </main>
 
-    <footer class="footer">
-      <p>Node.js &bull; TypeScript &bull; Brutalist UI</p>
-    </footer>
+      <section class="events-section panel" id="events-panel" style="display: none;">
+        <div class="panel-head">== PENDING_EVENTS ==</div>
+        <div class="panel-body">
+          <div id="events-container" class="events-container">
+            <!-- Injected via JS -->
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <!-- RIGHT SIDE: Command Dock & Chronicle -->
+    <aside class="col-side">
+      <section class="action-dock panel">
+        <div class="panel-head">== COMMAND_DOCK ==</div>
+        <div class="panel-body">
+          
+          <!-- SETUP -->
+          <form id="sim-form" class="cmd-form">
+            <div class="form-row">
+              <label>SEED</label>
+              <input type="number" id="seed" value="42" required>
+            </div>
+            <div class="form-row">
+              <label>DIFF</label>
+              <select id="difficulty">
+                <option value="newbie">NEWBIE</option>
+                <option value="easy">EASY</option>
+                <option value="standard" selected>STD</option>
+                <option value="hard">HARD</option>
+              </select>
+            </div>
+            <button type="submit" id="btn-run" class="btn-primary">[ INIT_SESSION ]</button>
+          </form>
+
+          <!-- CONTROL -->
+          <div id="session-controls" class="session-controls" style="display: none;">
+            <div class="cmd-divider">-- TIME_CONTROL --</div>
+            <div class="btn-group">
+              <button id="btn-pause-resume" class="btn-cmd" type="button">[ PAUSE ]</button>
+              <button id="btn-step" class="btn-cmd" type="button">[ STEP ]</button>
+            </div>
+            <div class="slider-group">
+              <label>SPD <span id="speed-label">1x</span></label>
+              <input type="range" id="speed-slider" min="1" max="10" value="1">
+            </div>
+            <div class="cmd-divider">-- STATE_IO --</div>
+            <div class="btn-group">
+              <button id="btn-save" class="btn-cmd" type="button">[ SAVE ]</button>
+              <button id="btn-load" class="btn-cmd" type="button">[ LOAD ]</button>
+            </div>
+          </div>
+
+          <!-- ACTION -->
+          <div id="action-panel" class="action-panel" style="display: none;">
+            <div class="cmd-divider">-- ANNEX_PROTOCOL --</div>
+            <div class="form-row">
+              <label>LANE</label>
+              <select id="annex-lane">
+                <option value="economy">ECONOMY</option>
+                <option value="diplomacy">DIPLOMACY</option>
+                <option value="war">WAR</option>
+              </select>
+            </div>
+            <div class="form-row">
+              <label>CITY</label>
+              <input type="text" id="annex-city" placeholder="Select or type">
+            </div>
+            <button id="btn-do-annex" class="btn-cmd warning" type="button">[ EXEC_ANNEX ]</button>
+            <div id="annex-feedback" class="cmd-feedback"></div>
+          </div>
+
+        </div>
+      </section>
+
+      <section class="chronicle-panel panel">
+        <div class="panel-head">== CHRONICLE_LOG ==</div>
+        <div class="panel-body">
+          <div id="logs-container" class="logs-container">
+            <!-- Logs -->
+          </div>
+        </div>
+      </section>
+
+      <section class="rules-panel panel">
+        <div class="panel-head">== RULES_SNAPSHOT ==</div>
+        <div class="panel-body">
+          <ul id="rules-list" class="rules-list">
+            <li>AWAITING_SESSION...</li>
+          </ul>
+        </div>
+      </section>
+
+      <section class="json-panel panel">
+        <div class="panel-head">
+          <span>== STATE.JSON ==</span>
+          <button id="btn-copy" class="btn-text" type="button">[COPY]</button>
+        </div>
+        <div class="panel-body">
+          <pre><code id="json-output">// Waiting...</code></pre>
+        </div>
+      </section>
+    </aside>
+
   </div>
+
   <script src="script.js"></script>
 </body>
 </html>
