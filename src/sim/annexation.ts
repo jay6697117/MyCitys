@@ -23,7 +23,7 @@ const BATTLE_OUTCOME_DELTA: Record<BattleOutcome, number> = {
   majorLose: 12
 };
 
-const TIER_THRESHOLD: Record<CityTier, number> = {
+export const TIER_THRESHOLD: Record<CityTier, number> = {
   frontier: 0,
   core: -50,
   capital: -100
