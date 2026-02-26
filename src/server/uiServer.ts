@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { existsSync } from "node:fs";
 import { readFile } from "node:fs/promises";
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
 import { dirname, extname, join } from "node:path";
@@ -10,7 +11,13 @@ import { GameSession } from "../sim/gameSession.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
-const PUBLIC_DIR = join(__dirname, "../../public");
+const PUBLIC_DIR_CANDIDATES = [
+  join(process.cwd(), "public"),
+  join(__dirname, "../../public"),
+  join(__dirname, "../../../public")
+];
+const PUBLIC_DIR =
+  PUBLIC_DIR_CANDIDATES.find((candidate) => existsSync(candidate)) ?? PUBLIC_DIR_CANDIDATES[0];
 
 const sessions = new Map<string, GameSession>();
 
@@ -218,6 +225,16 @@ const server = createServer(async (req, res) => {
 
         if (type === "save") {
           const result = session.manualSave();
+          json(res, result.ok ? 200 : 400, {
+            ok: result.ok,
+            message: result.message,
+            snapshot: session.getSnapshot()
+          });
+          return;
+        }
+
+        if (type === "load") {
+          const result = session.loadLatestSave();
           json(res, result.ok ? 200 : 400, {
             ok: result.ok,
             message: result.message,

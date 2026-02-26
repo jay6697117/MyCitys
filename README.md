@@ -7,6 +7,12 @@
 ```bash
 pnpm install
 
+# 生产构建
+pnpm build
+
+# 运行构建产物
+pnpm start
+
 # 启动 Web UI (推荐)
 # 访问 http://localhost:3000
 pnpm dev
@@ -32,13 +38,14 @@ pnpm typecheck
 - 自动存档周期：10 分钟
 - 手动存档：任意时刻可触发
 - 当前实现使用仓库内 `SaveRepository` 接口做原型化管理
+- 读档回退：会话内会优先读取最近一次存档快照，玩家可通过重新载入会话继续
 
 ## Web 可玩会话接口
 
 - `POST /api/session/new`：创建会话，参数示例 `{ "seed": 42, "difficulty": "standard" }`
 - `GET /api/session/:id`：轮询会话快照（`snapshot`）
 - `POST /api/session/:id/control`：控制会话（`paused` / `timeScale` / `stepTick`）
-- `POST /api/session/:id/action`：执行动作（`annex` / `event` / `save`）
+- `POST /api/session/:id/action`：执行动作（`annex` / `event` / `save` / `load`）
 
 难度可选值：`newbie`、`easy`、`standard`、`hard`
 

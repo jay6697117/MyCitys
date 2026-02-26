@@ -13,6 +13,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnPauseResume = document.getElementById('btn-pause-resume');
   const btnStep = document.getElementById('btn-step');
   const btnSave = document.getElementById('btn-save');
+  const btnLoad = document.getElementById('btn-load');
   const speedSlider = document.getElementById('speed-slider');
   const speedLabel = document.getElementById('speed-label');
 
@@ -350,6 +351,15 @@ document.addEventListener('DOMContentLoaded', () => {
       const res = await performAction({ type: 'save' });
       if (res && res.ok) {
         alert('存档成功 (SAVE_SUCCESS)');
+      }
+    });
+  }
+
+  if (btnLoad) {
+    btnLoad.addEventListener('click', async () => {
+      const res = await performAction({ type: 'load' });
+      if (res && res.ok) {
+        alert('读档成功 (LOAD_SUCCESS)');
       }
     });
   }

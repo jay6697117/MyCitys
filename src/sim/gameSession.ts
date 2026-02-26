@@ -32,6 +32,20 @@ interface PendingEvent {
   choices: EventChoice[];
 }
 
+interface PersistedSessionState {
+  runtimeState: RuntimeState;
+  cities: RuntimeCity[];
+  elapsedSeconds: number;
+  accumulatorSeconds: number;
+  nextEventCountdownSeconds: number;
+  lastAutoSaveMinute: number;
+  timeScale: number;
+  paused: boolean;
+  outcome: "ongoing" | "victory" | "defeat";
+  pendingEvent: PendingEvent | null;
+  logs: string[];
+}
+
 export interface ActionResult {
   ok: boolean;
   message: string;
@@ -304,10 +318,53 @@ export class GameSession {
     const elapsedMinutes = Math.floor(this.elapsedSeconds / 60);
     const didSave = this.saveRepository.autoSaveIfDue({
       elapsedMinutes,
-      state: this.getSnapshot()
+      state: this.exportPersistedState()
     });
     if (didSave) {
       this.lastAutoSaveMinute = elapsedMinutes;
+    }
+  }
+
+  private exportPersistedState(): PersistedSessionState {
+    return {
+      runtimeState: structuredClone(this.runtimeState),
+      cities: structuredClone(this.cities),
+      elapsedSeconds: this.elapsedSeconds,
+      accumulatorSeconds: this.accumulatorSeconds,
+      nextEventCountdownSeconds: this.nextEventCountdownSeconds,
+      lastAutoSaveMinute: this.lastAutoSaveMinute,
+      timeScale: this.timeScale,
+      paused: this.paused,
+      outcome: this.outcome,
+      pendingEvent: structuredClone(this.pendingEvent),
+      logs: structuredClone(this.logs)
+    };
+  }
+
+  private restorePersistedState(state: PersistedSessionState): void {
+    this.runtimeState = structuredClone(state.runtimeState);
+    this.cities = structuredClone(state.cities);
+    this.elapsedSeconds = state.elapsedSeconds;
+    this.accumulatorSeconds = state.accumulatorSeconds;
+    this.nextEventCountdownSeconds = state.nextEventCountdownSeconds;
+    this.lastAutoSaveMinute = state.lastAutoSaveMinute;
+    this.timeScale = state.timeScale;
+    this.paused = state.paused;
+    this.outcome = state.outcome;
+    this.pendingEvent = structuredClone(state.pendingEvent);
+
+    this.logs.length = 0;
+    this.logs.push(...state.logs.slice(0, 40));
+
+    this.recalculateAnnexedCities();
+    const recalculatedOutcome = evaluateOutcome({
+      annexedCities: this.runtimeState.annexedCities,
+      capitalLost: this.runtimeState.capitalLost,
+      cv: this.runtimeState.governance.cv
+    });
+    this.outcome = recalculatedOutcome;
+    if (this.outcome !== "ongoing") {
+      this.paused = true;
     }
   }
 
@@ -478,9 +535,19 @@ export class GameSession {
   }
 
   public manualSave(): ActionResult {
-    const id = this.saveRepository.manualSave(this.getSnapshot());
+    const id = this.saveRepository.manualSave(this.exportPersistedState());
     this.pushLog(`手动存档完成（ID=${id}）。`);
     return { ok: true, message: `存档成功 #${id}` };
+  }
+
+  public loadLatestSave(): ActionResult {
+    const saved = this.saveRepository.loadLatest<PersistedSessionState>();
+    if (!saved) {
+      return { ok: false, message: "当前没有可读取的存档。" };
+    }
+    this.restorePersistedState(saved);
+    this.pushLog("已读取最近存档。当前战局可继续。");
+    return { ok: true, message: "读档成功" };
   }
 
   public getSnapshot(): SessionSnapshot {
