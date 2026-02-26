@@ -1,0 +1,7 @@
+node_modules/
+dist/
+coverage/
+.sisyphus/
+.DS_Store
+*.log
+pnpm-debug.log*
